@@ -400,7 +400,7 @@ export default function SeverancePage() {
 
             {/* 퇴직금 상세 계산 및 수정 다이얼로그 */}
             <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-                <DialogContent className="sm:max-w-[500px]">
+                <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>{getTranslation(language, 'severance_detail_calculation_title')}</DialogTitle>
                         <DialogDescription>
@@ -408,38 +408,38 @@ export default function SeverancePage() {
                         </DialogDescription>
                     </DialogHeader>
                     {selectedEmployee && (
-                        <div className="grid gap-4 py-4 text-sm">
-                            <div className="grid grid-cols-3 items-center">
+                        <div className="flex flex-col gap-4 py-4 text-sm">
+                            <div className="flex flex-col items-start gap-1">
                                 <Label>{getTranslation(language, 'payroll_col_employee')}</Label>
-                                <div className="col-span-2">{selectedEmployee.name}</div>
+                                <div className="font-medium">{selectedEmployee.name}</div>
                             </div>
-                            <div className="grid grid-cols-3 items-center">
+                            <div className="flex flex-col items-start gap-1">
                                 <Label>{getTranslation(language, 'severance_col_hire_date')}</Label>
-                                <div className="col-span-2">{selectedEmployee.hireDate}</div>
+                                <div className="font-medium">{selectedEmployee.hireDate}</div>
                             </div>
-                            <div className="grid grid-cols-3 items-center">
+                            <div className="flex flex-col items-start gap-1">
                                 <Label>{getTranslation(language, 'severance_col_years_of_service')}</Label>
-                                <div className="col-span-2">{selectedEmployee.yearsOfService}{getTranslation(language, 'common_year_suffix')}</div>
+                                <div className="font-medium">{selectedEmployee.yearsOfService}{getTranslation(language, 'common_year_suffix')}</div>
                             </div>
-                            <div className="grid grid-cols-3 items-center mt-4 border-t pt-4">
+                            <div className="flex flex-col items-start gap-1 mt-4 border-t pt-4">
                                 <Label className="font-bold">{getTranslation(language, 'severance_statutory_pay_estimated')}</Label>
-                                <div className="col-span-2 text-right font-bold">
+                                <div className="text-right font-bold">
                                     {(selectedEmployee.estimatedSeverancePay - selectedEmployee.nonStatutoryPay).toLocaleString()}{getTranslation(language, 'common_currency_unit')}
                                 </div>
                             </div>
-                            <div className="grid grid-cols-3 items-center">
+                            <div className="flex flex-col items-start gap-1">
                                 <Label htmlFor="nonStatutoryPayInput">{getTranslation(language, 'severance_non_statutory_pay')}</Label>
                                 <Input 
                                     id="nonStatutoryPayInput" 
                                     type="number" 
                                     value={nonStatutoryPayInput} 
                                     onChange={handleNonStatutoryPayChange} 
-                                    className="col-span-2 text-right"
+                                    className="text-right"
                                 />
                             </div>
-                            <div className="grid grid-cols-3 items-center font-bold text-lg mt-4 border-t pt-4">
+                            <div className="flex flex-col items-start gap-1 font-bold text-lg mt-4 border-t pt-4">
                                 <Label>{getTranslation(language, 'severance_total_estimated_pay')}</Label>
-                                <div className="col-span-2 text-right text-primary">
+                                <div className="text-right text-primary">
                                     {(selectedEmployee.estimatedSeverancePay - selectedEmployee.nonStatutoryPay + nonStatutoryPayInput).toLocaleString()}{getTranslation(language, 'common_currency_unit')}
                                 </div>
                             </div>
