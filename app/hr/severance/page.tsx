@@ -26,6 +26,8 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
+import { useLanguage } from '@/contexts/language-context'; // Import useLanguage
+import { getTranslation } from '@/lib/i18n'; // Import getTranslation
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -105,6 +107,7 @@ const calculateSeverancePay = (hireDate: string, currentStatus: '재직' | '중�
  *              직원별 추정 퇴직금 조회, 중도 정산 처리, 법정 외 퇴직금 반영 등의 기능을 포함합니다.
  */
 export default function SeverancePage() {
+  const { language } = useLanguage();
   // 직원 목록 및 퇴직금 관련 상태. 초기화 시 각 직원의 퇴직금을 추정 계산합니다.
   const [employees, setEmployees] = React.useState<SeveranceEmployee[]>(() => 
     mockEmployees.map(emp => {
@@ -133,7 +136,7 @@ export default function SeverancePage() {
   const getDepartmentName = (departmentId: number) => {
     // 실제 구현에서는 departmentId를 사용하여 departments 목록에서 이름을 찾아야 합니다.
     // 현재 mockEmployees는 department 객체를 포함하지 않으므로 임시로 'N/A'를 반환하거나 다른 방식을 사용합니다.
-    return (mockEmployees as any).find((e: any) => e.departmentId === departmentId)?.department?.name || 'N/A';
+    return (mockEmployees as any).find((e: any) => e.departmentId === departmentId)?.department?.name || getTranslation(language, 'common_na');
   }
 
   /**
@@ -174,48 +177,66 @@ export default function SeverancePage() {
         ? { ...emp, status: '중도정산', estimatedSeverancePay: emp.estimatedSeverancePay + emp.nonStatutoryPay } // 중도정산 시 현재까지의 퇴직금 확정
         : emp
     ));
-    alert(`${getEmployeeName(employeeId)}님의 퇴직금 중간 정산이 완료되었습니다.`);
+    alert(`${getEmployeeName(employeeId)}${getTranslation(language, 'severance_mid_term_settlement_success')}`);
+  };
+
+  /**
+   * @function handleCancelMidTermSettlement
+   * @description 특정 직원의 중도 정산을 취소하고, 상태를 '재직'으로 되돌립니다.
+   *              추정 퇴직금은 다시 계산됩니다.
+   * @param {number} employeeId - 중도 정산을 취소할 직원의 ID.
+   */
+  const handleCancelMidTermSettlement = (employeeId: number) => {
+    setEmployees(prev => prev.map(emp => {
+      if (emp.id === employeeId) {
+        // 상태를 '재직'으로 되돌리고 퇴직금 재계산
+        const { years, pay } = calculateSeverancePay(emp.hireDate, '재직', emp.nonStatutoryPay);
+        return { ...emp, status: '재직', yearsOfService: years, estimatedSeverancePay: pay };
+      }
+      return emp;
+    }));
+    alert(`${getEmployeeName(employeeId)}${getTranslation(language, 'severance_cancel_mid_term_settlement_success')}`);
   };
 
   // tanstack/react-table의 컬럼 정의.
   const columns: ColumnDef<SeveranceEmployee>[] = [
     {
       accessorKey: "name",
-      header: "이름",
+      header: getTranslation(language, 'payroll_col_employee'),
       cell: ({ row }) => <div>{row.getValue("name")}</div>,
     },
     {
       accessorKey: "departmentId",
-      header: "부서",
+      header: getTranslation(language, 'severance_col_department'),
       cell: ({ row }) => getDepartmentName(row.getValue("departmentId")),
     },
     {
       accessorKey: "position",
-      header: "직책",
+      header: getTranslation(language, 'severance_col_position'),
       cell: ({ row }) => <div>{row.getValue("position")}</div>,
     },
     {
       accessorKey: "hireDate",
-      header: "입사일",
+      header: getTranslation(language, 'severance_col_hire_date'),
       cell: ({ row }) => <div>{row.getValue("hireDate")}</div>,
     },
     {
       accessorKey: "yearsOfService",
-      header: "근속연수",
-      cell: ({ row }) => <div>{row.original.yearsOfService}년</div>,
+      header: getTranslation(language, 'severance_col_years_of_service'),
+      cell: ({ row }) => <div>{row.original.yearsOfService}{getTranslation(language, 'common_year_suffix')}</div>,
     },
     {
       accessorKey: "estimatedSeverancePay",
-      header: "추정 퇴직금",
+      header: getTranslation(language, 'severance_col_estimated_severance_pay'),
       cell: ({ row }) => (
         <div className="text-right">
-          {row.original.estimatedSeverancePay.toLocaleString()}원
+          {row.original.estimatedSeverancePay.toLocaleString()}{getTranslation(language, 'common_currency_unit')}
         </div>
       ),
     },
     {
       accessorKey: "status",
-      header: "상태",
+      header: getTranslation(language, 'payroll_col_status'),
       cell: ({ row }) => (
         <div>{row.original.status}</div>
       ),
@@ -229,24 +250,30 @@ export default function SeverancePage() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">메뉴 열기</span>
+                <span className="sr-only">{getTranslation(language, 'common_open_menu')}</span>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuLabel>{getTranslation(language, 'common_actions')}</DropdownMenuLabel>
               {/* 상세 계산/수정 다이얼로그를 여는 버튼 */}
               <DropdownMenuItem onClick={() => {
                 setSelectedEmployee(employee);
                 setNonStatutoryPayInput(employee.nonStatutoryPay); // 현재 법정 외 퇴직금으로 초기화
                 setIsDetailDialogOpen(true);
               }}>
-                <Calculator className="mr-2 h-4 w-4" /> 상세 계산/수정
+                <Calculator className="mr-2 h-4 w-4" /> {getTranslation(language, 'severance_detail_calculation_edit')}
               </DropdownMenuItem>
               {/* 재직 상태인 직원에 대해서만 중도 정산 버튼을 표시 */}
               {employee.status === '재직' && (
                 <DropdownMenuItem onClick={() => handleMidTermSettlement(employee.id)} className="text-blue-600">
-                  <FileText className="mr-2 h-4 w-4" /> 중도 정산
+                  <FileText className="mr-2 h-4 w-4" /> {getTranslation(language, 'severance_mid_term_settlement')}
+                </DropdownMenuItem>
+              )}
+              {/* 중도정산 상태인 직원에 대해서만 중도 정산 취소 버튼을 표시 */}
+              {employee.status === '중도정산' && (
+                <DropdownMenuItem onClick={() => handleCancelMidTermSettlement(employee.id)} className="text-red-600">
+                  <FileText className="mr-2 h-4 w-4" /> {getTranslation(language, 'severance_cancel_mid_term_settlement')}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -285,13 +312,13 @@ export default function SeverancePage() {
       <SidebarInset>
         <SiteHeader />
         <main className="flex flex-1 flex-col p-4 lg:p-6">
-            <h1 className="text-2xl font-semibold mb-6">퇴직금 관리</h1>
+            <h1 className="text-2xl font-semibold mb-6">{getTranslation(language, 'sidebar_hr_severance_management')}</h1>
             
             <div className="w-full">
                 {/* 직원 이름으로 검색 필터 */}
                 <div className="flex items-center justify-between py-4">
                     <Input
-                      placeholder="직원 이름으로 검색..."
+                      placeholder={getTranslation(language, 'severance_search_employee_placeholder')}
                       value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
                       onChange={(event) =>
                         table.getColumn("name")?.setFilterValue(event.target.value)
@@ -343,7 +370,7 @@ export default function SeverancePage() {
                               colSpan={columns.length}
                               className="h-24 text-center"
                             >
-                              결과가 없습니다.
+                              {getTranslation(language, 'common_no_results')}
                             </TableCell>
                           </TableRow>
                         )}
@@ -358,7 +385,7 @@ export default function SeverancePage() {
                       onClick={() => table.previousPage()}
                       disabled={!table.getCanPreviousPage()}
                     >
-                      이전
+                      {getTranslation(language, 'common_previous')}
                     </Button>
                     <Button
                       variant="outline"
@@ -366,7 +393,7 @@ export default function SeverancePage() {
                       onClick={() => table.nextPage()}
                       disabled={!table.getCanNextPage()}
                     >
-                      다음
+                      {getTranslation(language, 'common_next')}
                     </Button>
                   </div>
             </div>
@@ -375,33 +402,33 @@ export default function SeverancePage() {
             <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
                 <DialogContent className="sm:max-w-[500px]">
                     <DialogHeader>
-                        <DialogTitle>퇴직금 상세 계산</DialogTitle>
+                        <DialogTitle>{getTranslation(language, 'severance_detail_calculation_title')}</DialogTitle>
                         <DialogDescription>
-                            {getEmployeeName(selectedEmployee?.id || 0)}님의 퇴직금 계산 내역입니다. 법정 외 퇴직금을 수정할 수 있습니다.
+                            {getEmployeeName(selectedEmployee?.id || 0)}{getTranslation(language, 'severance_detail_calculation_description')}
                         </DialogDescription>
                     </DialogHeader>
                     {selectedEmployee && (
                         <div className="grid gap-4 py-4 text-sm">
                             <div className="grid grid-cols-3 items-center">
-                                <Label>이름</Label>
+                                <Label>{getTranslation(language, 'payroll_col_employee')}</Label>
                                 <div className="col-span-2">{selectedEmployee.name}</div>
                             </div>
                             <div className="grid grid-cols-3 items-center">
-                                <Label>입사일</Label>
+                                <Label>{getTranslation(language, 'severance_col_hire_date')}</Label>
                                 <div className="col-span-2">{selectedEmployee.hireDate}</div>
                             </div>
                             <div className="grid grid-cols-3 items-center">
-                                <Label>근속연수</Label>
-                                <div className="col-span-2">{selectedEmployee.yearsOfService}년</div>
+                                <Label>{getTranslation(language, 'severance_col_years_of_service')}</Label>
+                                <div className="col-span-2">{selectedEmployee.yearsOfService}{getTranslation(language, 'common_year_suffix')}</div>
                             </div>
                             <div className="grid grid-cols-3 items-center mt-4 border-t pt-4">
-                                <Label className="font-bold">법정 퇴직금 (추정)</Label>
+                                <Label className="font-bold">{getTranslation(language, 'severance_statutory_pay_estimated')}</Label>
                                 <div className="col-span-2 text-right font-bold">
-                                    {(selectedEmployee.estimatedSeverancePay - selectedEmployee.nonStatutoryPay).toLocaleString()}원
+                                    {(selectedEmployee.estimatedSeverancePay - selectedEmployee.nonStatutoryPay).toLocaleString()}{getTranslation(language, 'common_currency_unit')}
                                 </div>
                             </div>
                             <div className="grid grid-cols-3 items-center">
-                                <Label htmlFor="nonStatutoryPayInput">법정 외 퇴직금</Label>
+                                <Label htmlFor="nonStatutoryPayInput">{getTranslation(language, 'severance_non_statutory_pay')}</Label>
                                 <Input 
                                     id="nonStatutoryPayInput" 
                                     type="number" 
@@ -411,19 +438,19 @@ export default function SeverancePage() {
                                 />
                             </div>
                             <div className="grid grid-cols-3 items-center font-bold text-lg mt-4 border-t pt-4">
-                                <Label>총 추정 퇴직금</Label>
+                                <Label>{getTranslation(language, 'severance_total_estimated_pay')}</Label>
                                 <div className="col-span-2 text-right text-primary">
-                                    {(selectedEmployee.estimatedSeverancePay - selectedEmployee.nonStatutoryPay + nonStatutoryPayInput).toLocaleString()}원
+                                    {(selectedEmployee.estimatedSeverancePay - selectedEmployee.nonStatutoryPay + nonStatutoryPayInput).toLocaleString()}{getTranslation(language, 'common_currency_unit')}
                                 </div>
                             </div>
                             <p className="text-xs text-muted-foreground col-span-3 mt-4">
-                                * 법정 퇴직금은 평균 월급 300만원 기준으로 근속연수에 따라 추정된 금액입니다. 실제 계산은 복잡한 법률 및 회사 규정에 따릅니다.
+                                {getTranslation(language, 'severance_disclaimer')}
                             </p>
                         </div>
                     )}
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDetailDialogOpen(false)}>닫기</Button>
-                        <Button onClick={handleSaveSeveranceDetails}>저장</Button>
+                        <Button variant="outline" onClick={() => setIsDetailDialogOpen(false)}>{getTranslation(language, 'common_close')}</Button>
+                        <Button onClick={handleSaveSeveranceDetails}>{getTranslation(language, 'common_save')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

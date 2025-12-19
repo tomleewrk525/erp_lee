@@ -69,6 +69,9 @@ import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
+import { useLanguage } from "../contexts/language-context" // Import useLanguage
+import { getTranslation } from "../lib/i18n" // Import getTranslation
+
 import {
   Sidebar,
   SidebarContent,
@@ -435,6 +438,7 @@ const data = {
  */
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [allOpen, setAllOpen] = React.useState(true); // State to control all submenus
+  const { language } = useLanguage(); // Get current language
   // Mock user data for demonstration purposes to satisfy the NavUser component's prop requirements.
   // In a real application, this data would come from an authentication context or be fetched.
   const mockUser = {
@@ -458,12 +462,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <a href="#">
                 <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">erp_geunsulee</span>
+                <span className="text-base font-semibold">{getTranslation(language, 'app_brand_name')}</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem> {/* New menu item for the toggle button */}
-            <SidebarMenuButton onClick={toggleAll} tooltip={allOpen ? "Collapse All" : "Expand All"}>
+            <SidebarMenuButton onClick={toggleAll} tooltip={allOpen ? getTranslation(language, 'common_collapse_all') : getTranslation(language, 'common_expand_all')}>
               {allOpen ? <IconArrowsMinimize /> : <IconArrowsMaximize />}
             </SidebarMenuButton>
           </SidebarMenuItem>
