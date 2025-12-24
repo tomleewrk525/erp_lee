@@ -43,6 +43,12 @@ pnpm dev
   ```
 
 ## 6. 개발 환경 팁
-- `pnpm dlx turbo run where <project_name>`: `ls`로 스캔하는 대신 패키지 디렉토리로 바로 이동합니다.
-- `pnpm install --filter <project_name>`: 패키지를 워크스페이스에 추가하여 Vite, ESLint, TypeScript가 인식하도록 합니다.
-- `pnpm create vite@latest <project_name> -- --template react-ts`: TypeScript 검사를 바로 사용할 수 있는 새 React + Vite 패키지를 생성합니다.
+
+- **`pnpm dlx turbo run where <project_name>`**: `ls`로 스캔하는 대신 패키지 디렉토리로 바로 이동합니다.
+  - **이유**: 복잡한 모노레포 구조에서 특정 패키지의 실제 폴더 위치를 빠르게 찾을 수 있습니다. `cd` 명령어와 함께 사용하여 원하는 패키지로 즉시 이동하는 데 유용합니다.
+
+- **`pnpm install --filter <project_name>`**: 패키지를 워크스페이스에 추가하여 Vite, ESLint, TypeScript가 인식하도록 합니다.
+  - **이유**: 모노레포 내의 모든 패키지가 아닌, 지정된 단일 패키지에만 의존성을 설치할 때 사용합니다. 이를 통해 설치 시간을 단축하고 특정 패키지의 의존성만 관리할 수 있어, IDE나 린터가 해당 패키지를 정확히 인식하고 분석하는 데 도움을 줍니다.
+
+- **`pnpm create vite@latest <project_name> -- --template react-ts`**: TypeScript 검사를 바로 사용할 수 있는 새 React + Vite 패키지를 생성합니다.
+  - **이유**: 표준적인 React + TypeScript 프로젝트를 빠르게 생성하는 명령어입니다. Vite를 사용하여 빠른 개발 서버를 구축하고, `react-ts` 템플릿을 통해 타입스크립트 설정, `tsconfig.json` 파일, 기본 타입 정의가 자동으로 완료되므로, 수동 설정의 번거로움 없이 바로 타입-세이프(type-safe) 개발을 시작할 수 있습니다.
